@@ -1,0 +1,14 @@
+# colcon / ROS build artifacts
+build/
+install/
+log/
+
+# Python
+__pycache__/
+*.pyc
+
+# Editors
+.vscode/
+
+# External dependencies (DO NOT TRACK)
+src/moveit2_tutorials/
