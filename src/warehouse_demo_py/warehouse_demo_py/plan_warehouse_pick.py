@@ -1,36 +1,20 @@
 #!/usr/bin/env python3
-"""
-Plan pick motion in warehouse with custom start state
-"""
-
 import rclpy
 from rclpy.node import Node
-from moveit_msgs.msg import CollisionObject, PlanningScene, RobotState
-from moveit_msgs.srv import GetPositionIK
+from moveit_msgs.msg import CollisionObject, PlanningScene
 from sensor_msgs.msg import JointState
 from shape_msgs.msg import SolidPrimitive
 from geometry_msgs.msg import Pose
 import time
 
-
 class WarehousePicker(Node):
     def __init__(self):
         super().__init__('warehouse_picker')
-        
-        # Publisher for planning scene
-        self.scene_pub = self.create_publisher(
-            PlanningScene,
-            '/planning_scene',
-            10
-        )
-        
+        self.scene_pub = self.create_publisher(PlanningScene, '/planning_scene', 10)
         time.sleep(1.0)
-        
-        # Add warehouse and set safe start
         self.setup_scene_and_start()
         
     def create_collision_object(self, name, frame_id, pose, dimensions):
-        """Create a box collision object"""
         collision_object = CollisionObject()
         collision_object.header.frame_id = frame_id
         collision_object.id = name
@@ -52,52 +36,36 @@ class WarehousePicker(Node):
         return collision_object
     
     def setup_scene_and_start(self):
-        """Add warehouse objects AND set safe start configuration"""
-        
         planning_scene = PlanningScene()
         planning_scene.is_diff = True
-        
         frame_id = "panda_link0"
         
-        # ============================================================
-        # FINAL FIX: Shelves at x=1.5 (VERY FAR!)
-        # Robot base is FIXED at (0,0,0) by demo.launch.py
-        # Panda arm reach ~0.85m, so x=1.5 is accessible but safe
-        # ============================================================
+        # FIXED: Shelves at x=0.65 (WITHIN REACH!)
         floor = self.create_collision_object(
             "floor", frame_id, [0.0, 0.0, -0.005], [3.0, 3.0, 0.01]
         )
         shelf1 = self.create_collision_object(
-            "shelf_center", frame_id, [1.5, 0.0, 0.4], [0.6, 0.1, 0.8]
+            "shelf_center", frame_id, [0.65, 0.0, 0.3], [0.4, 0.05, 0.6]
         )
         shelf2 = self.create_collision_object(
-            "shelf_left", frame_id, [1.5, 0.5, 0.4], [0.6, 0.1, 0.8]
+            "shelf_left", frame_id, [0.65, 0.5, 0.3], [0.4, 0.05, 0.6]
         )
         shelf3 = self.create_collision_object(
-            "shelf_right", frame_id, [1.5, -0.6, 0.4], [0.6, 0.1, 0.8]
+            "shelf_right", frame_id, [0.65, -0.5, 0.3], [0.4, 0.05, 0.6]
         )
         item = self.create_collision_object(
-            "target_item", frame_id, [1.5, 0.0, 0.85], [0.1, 0.1, 0.15]
+            "target_item", frame_id, [0.65, 0.0, 0.70], [0.05, 0.05, 0.08]
         )
         back_wall = self.create_collision_object(
-            "back_wall", frame_id, [2.0, 0.0, 0.5], [0.01, 3.0, 1.0]
+            "back_wall", frame_id, [1.0, 0.0, 0.5], [0.01, 3.0, 1.0]
         )
         
         planning_scene.world.collision_objects.extend([
             floor, shelf1, shelf2, shelf3, item, back_wall
         ])
         
-        # ----------------------------------------------------------
-        # SET SAFE START CONFIGURATION
-        # ----------------------------------------------------------
         safe_joint_positions = [
-            0.0,      # panda_joint1
-            -0.785,   # panda_joint2 (elbow up)
-            0.0,      # panda_joint3
-            -2.356,   # panda_joint4 (elbow bent)
-            0.0,      # panda_joint5
-            1.571,    # panda_joint6
-            0.785,    # panda_joint7
+            0.0, -0.785, 0.0, -2.356, 0.0, 1.571, 0.785
         ]
         
         joint_state = JointState()
@@ -109,19 +77,14 @@ class WarehousePicker(Node):
         joint_state.position = safe_joint_positions
         
         planning_scene.robot_state.joint_state = joint_state
-        planning_scene.robot_state.is_diff = False  # Set absolute state
+        planning_scene.robot_state.is_diff = False
         
-        # Publish scene with new start state
         self.scene_pub.publish(planning_scene)
         
         self.get_logger().info('✓ Published warehouse scene')
-        self.get_logger().info('✓ Shelves at x=1.5 (VERY FAR from robot base!)')
-        self.get_logger().info('✓ Robot base FIXED at (0,0,0) - cannot move')
-        self.get_logger().info('✓ Set robot to SAFE START configuration')
-        self.get_logger().info('  Joint positions: ' + str(safe_joint_positions))
-        self.get_logger().info('')
-        self.get_logger().info('Goal at (0.6, 0.0, 0.5) should work perfectly!')
-
+        self.get_logger().info('✓ Shelves at x=0.65 (WITHIN REACH!)')
+        self.get_logger().info('✓ Item at (0.65, 0.0, 0.70)')
+        self.get_logger().info('✓ C++ will plan to (0.65, 0.0, 0.80) - above item')
 
 def main(args=None):
     rclpy.init(args=args)
@@ -129,7 +92,6 @@ def main(args=None):
     rclpy.spin_once(node, timeout_sec=2.0)
     node.destroy_node()
     rclpy.shutdown()
-
 
 if __name__ == '__main__':
     main()

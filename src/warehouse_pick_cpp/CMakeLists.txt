@@ -25,6 +25,7 @@ ament_target_dependencies(warehouse_systems_demo
   rclcpp
   moveit_ros_planning_interface
   moveit_core
+  visualization_msgs
 )
 # Install
 install(TARGETS
