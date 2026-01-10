@@ -224,7 +224,11 @@ int main(int argc, char* argv[])
   // GOAL SETUP (C: Fixed coordinates within reach)
   // ================================================================
   RCLCPP_INFO(logger, "[Stage 0] Setting up goal...");
-  
+  move_group.setPositionTarget(0.65, 0.0, 0.80, "panda_hand");
+
+  RCLCPP_INFO(logger, "Goal position: (0.65, 0.00, 0.80)");
+  RCLCPP_INFO(logger, "Orientation: FREE (RRT optimizes)");
+
   geometry_msgs::msg::Pose goal_pose;
   goal_pose.position.x = 0.65;  // Within reach!
   goal_pose.position.y = 0.0;   
@@ -283,7 +287,7 @@ int main(int argc, char* argv[])
   RCLCPP_INFO(logger, "[Stage 1] Multi-start planning (K=6)...");
   RCLCPP_INFO(logger, " ");
   
-  move_group.setPoseTarget(goal_pose);
+  // move_group.setPoseTarget(goal_pose); // doing this because rrt cannot find a path
   move_group.setPlanningTime(10.0);
   
   const int K = 6;

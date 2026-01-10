@@ -41,9 +41,9 @@ class WarehousePicker(Node):
         frame_id = "panda_link0"
         
         # FIXED: Shelves at x=0.65 (WITHIN REACH!)
-        floor = self.create_collision_object(
-            "floor", frame_id, [0.0, 0.0, -0.005], [3.0, 3.0, 0.01]
-        )
+        # floor = self.create_collision_object(
+        #     "floor", frame_id, [0.0, 0.0, -0.025], [3.0, 3.0, 0.01]
+        # )
         shelf1 = self.create_collision_object(
             "shelf_center", frame_id, [0.65, 0.0, 0.3], [0.4, 0.05, 0.6]
         )
@@ -61,7 +61,7 @@ class WarehousePicker(Node):
         )
         
         planning_scene.world.collision_objects.extend([
-            floor, shelf1, shelf2, shelf3, item, back_wall
+            shelf1, shelf2, shelf3, item, back_wall
         ])
         
         safe_joint_positions = [
