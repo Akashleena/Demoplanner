@@ -58,4 +58,13 @@ Demonstrates systems-level reasoning for production robotics:
 [ros2run]: Segmentation fault  ← Crash when trying to use invalid state
 
 My solution: this is a common issue in robotics world and i know how to debug this time synchronization
-
+```
+header:
+  stamp:
+    sec: 1768076051        ← Valid timestamp!
+    nanosec: 96313812
+position: [0.0, 0.0, 0.0, -0.785, ...]  ← Valid joint positions!
+```
+```
+latest received state has time 0.000000  ← Code sees no timestamp!
+```
