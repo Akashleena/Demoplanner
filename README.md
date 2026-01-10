@@ -52,3 +52,10 @@ Demonstrates systems-level reasoning for production robotics:
 - Optimizing for repeated warehouse-style tasks
 - Engineering collision-safe motion beyond default MoveIt guarantees
 
+  ## Debug logs
+  - [move_group]: Goal reached, success!  ← RViz/MoveGroup says SUCCESS
+[ERROR] Failed to fetch current robot state  ← Your C++ code can't get state
+[ros2run]: Segmentation fault  ← Crash when trying to use invalid state
+
+My solution: 
+
