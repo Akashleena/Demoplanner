@@ -1,0 +1,36 @@
+13] [systems_demo]: Attempt 0 | valid=1 | dense=1 | score=2.79 | len=2.79 | smooth=0.00
+[INFO] [1768087850.737744252] [systems_demo]:   → Visualizing waypoints (blue dots)
+[INFO] [1768087850.841007131] [viz]: Published 74 waypoint markers (blue)
+[INFO] [1768087850.844365519] [moveit_3170045745.moveit.ros.move_group_interface]: MoveGroup action client/server ready
+[INFO] [1768087850.846615767] [moveit_3170045745.moveit.ros.move_group_interface]: Planning request accepted
+[INFO] [1768087851.542709563] [moveit_3170045745.moveit.ros.move_group_interface]: Planning request complete!
+[INFO] [1768087851.544312818] [moveit_3170045745.moveit.ros.move_group_interface]: time taken to generate plan: 0.473586 seconds
+[INFO] [1768087851.544710892] [systems_demo]: Attempt 1 | valid=1 | dense=1 | score=4.33 | len=4.33 | smooth=0.00
+[INFO] [1768087851.545667468] [moveit_3170045745.moveit.ros.move_group_interface]: MoveGroup action client/server ready
+[INFO] [1768087851.547267926] [moveit_3170045745.moveit.ros.move_group_interface]: Planning request accepted
+[INFO] [1768087852.037850245] [moveit_3170045745.moveit.ros.move_group_interface]: Planning request complete!
+[INFO] [1768087852.038399856] [moveit_3170045745.moveit.ros.move_group_interface]: time taken to generate plan: 0.429073 seconds
+[INFO] [1768087852.038504549] [systems_demo]: Attempt 2 | valid=1 | dense=1 | score=3.94 | len=3.94 | smooth=0.00
+[INFO] [1768087852.038670394] [moveit_3170045745.moveit.ros.move_group_interface]: MoveGroup action client/server ready
+[INFO] [1768087852.039253435] [moveit_3170045745.moveit.ros.move_group_interface]: Planning request accepted
+[INFO] [1768087852.336663626] [moveit_3170045745.moveit.ros.move_group_interface]: Planning request complete!
+[INFO] [1768087852.336934252] [moveit_3170045745.moveit.ros.move_group_interface]: time taken to generate plan: 0.12085 seconds
+[INFO] [1768087852.337117151] [systems_demo]: Attempt 3 | valid=1 | dense=1 | score=4.16 | len=4.16 | smooth=0.00
+[INFO] [1768087852.337419932] [moveit_3170045745.moveit.ros.move_group_interface]: MoveGroup action client/server ready
+[INFO] [1768087852.338033224] [moveit_3170045745.moveit.ros.move_group_interface]: Planning request accepted
+[INFO] [1768087853.111263592] [moveit_3170045745.moveit.ros.move_group_interface]: Planning request complete!
+[INFO] [1768087853.111383163] [moveit_3170045745.moveit.ros.move_group_interface]: time taken to generate plan: 0.538822 seconds
+[INFO] [1768087853.111629491] [systems_demo]: Attempt 4 | valid=1 | dense=1 | score=4.99 | len=4.99 | smooth=0.00
+[INFO] [1768087853.112018985] [moveit_3170045745.moveit.ros.move_group_interface]: MoveGroup action client/server ready
+[INFO] [1768087853.112956058] [moveit_3170045745.moveit.ros.move_group_interface]: Planning request accepted
+[INFO] [1768087853.311423051] [moveit_3170045745.moveit.ros.move_group_interface]: Planning request complete!
+[INFO] [1768087853.311983676] [moveit_3170045745.moveit.ros.move_group_interface]: time taken to generate plan: 0.0135945 seconds
+[INFO] [1768087853.312086459] [systems_demo]: Attempt 5 | valid=1 | dense=1 | score=3.04 | len=3.04 | smooth=0.00
+[INFO] [1768087853.312117067] [systems_demo]:
+[INFO] [1768087853.312120262] [systems_demo]: [Stage 2] Selecting best candidate...
+[INFO] [1768087853.312126716] [systems_demo]: Best attempt: 0 (cost=2.79)
+[INFO] [1768087853.312130117] [systems_demo]:
+[INFO] [1768087853.312132103] [systems_demo]: Executing best trajectory to approach...
+[INFO] [1768087853.312880327] [moveit_3170045745.moveit.ros.move_group_interface]: Execute request accepted
+[INFO] [1768087860.651431026] [moveit_3170045745.moveit.ros.move_group_interface]: Execute request success!
+[INFO] [1768087860.651917494] [systems_demo]: ✓ Reached approach pose
