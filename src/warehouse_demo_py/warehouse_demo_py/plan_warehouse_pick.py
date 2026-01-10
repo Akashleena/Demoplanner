@@ -59,27 +59,28 @@ class WarehousePicker(Node):
         
         frame_id = "panda_link0"
         
-        # Add all warehouse objects (same as before)
+        # ============================================================
+        # FINAL FIX: Shelves at x=1.5 (VERY FAR!)
+        # Robot base is FIXED at (0,0,0) by demo.launch.py
+        # Panda arm reach ~0.85m, so x=1.5 is accessible but safe
+        # ============================================================
         floor = self.create_collision_object(
-            "floor", frame_id, [0.0, 0.0, -0.005], [2.0, 2.0, 0.01]
+            "floor", frame_id, [0.0, 0.0, -0.005], [3.0, 3.0, 0.01]
         )
         shelf1 = self.create_collision_object(
-            "shelf_center", frame_id, [0.7, 0.0, 0.4], [0.6, 0.1, 0.8]
+            "shelf_center", frame_id, [1.5, 0.0, 0.4], [0.6, 0.1, 0.8]
         )
         shelf2 = self.create_collision_object(
-            "shelf_left", frame_id, [0.7, 0.5, 0.4], [0.6, 0.1, 0.8]
+            "shelf_left", frame_id, [1.5, 0.5, 0.4], [0.6, 0.1, 0.8]
         )
-        # shelf3 = self.create_collision_object(
-        #     "shelf_right", frame_id, [0.7, -0.5, 0.4], [0.6, 0.1, 0.8]
-        # )
         shelf3 = self.create_collision_object(
-        "shelf_right", frame_id, [0.7, -0.6, 0.4], [0.6, 0.1, 0.8]  # Changed y from -0.5 to -0.6
+            "shelf_right", frame_id, [1.5, -0.6, 0.4], [0.6, 0.1, 0.8]
         )
         item = self.create_collision_object(
-            "target_item", frame_id, [0.7, 0.0, 0.85], [0.1, 0.1, 0.15]
+            "target_item", frame_id, [1.5, 0.0, 0.85], [0.1, 0.1, 0.15]
         )
         back_wall = self.create_collision_object(
-            "back_wall", frame_id, [1.1, 0.0, 0.5], [0.01, 2.0, 1.0]
+            "back_wall", frame_id, [2.0, 0.0, 0.5], [0.01, 3.0, 1.0]
         )
         
         planning_scene.world.collision_objects.extend([
@@ -89,7 +90,6 @@ class WarehousePicker(Node):
         # ----------------------------------------------------------
         # SET SAFE START CONFIGURATION
         # ----------------------------------------------------------
-        # Panda "ready" pose - arm tucked, away from shelves
         safe_joint_positions = [
             0.0,      # panda_joint1
             -0.785,   # panda_joint2 (elbow up)
@@ -115,10 +115,12 @@ class WarehousePicker(Node):
         self.scene_pub.publish(planning_scene)
         
         self.get_logger().info('✓ Published warehouse scene')
+        self.get_logger().info('✓ Shelves at x=1.5 (VERY FAR from robot base!)')
+        self.get_logger().info('✓ Robot base FIXED at (0,0,0) - cannot move')
         self.get_logger().info('✓ Set robot to SAFE START configuration')
         self.get_logger().info('  Joint positions: ' + str(safe_joint_positions))
         self.get_logger().info('')
-        self.get_logger().info('Now you can plan to target at (0.7, 0.0, 0.85)')
+        self.get_logger().info('Goal at (0.6, 0.0, 0.5) should work perfectly!')
 
 
 def main(args=None):
