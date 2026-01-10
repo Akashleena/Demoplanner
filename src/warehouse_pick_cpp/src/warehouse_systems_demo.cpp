@@ -214,11 +214,11 @@ int main(int argc, char* argv[])
   // ================================================================
   // DIAGNOSTIC: Check current position and reach
   // ================================================================
-  geometry_msgs::msg::Pose current_pose = move_group.getCurrentPose().pose;
-  RCLCPP_INFO(logger, "[Diagnostic] Current EE: (%.2f, %.2f, %.2f)",
-              current_pose.position.x,
-              current_pose.position.y,
-              current_pose.position.z);
+  // geometry_msgs::msg::Pose current_pose = move_group.getCurrentPose().pose;
+  // RCLCPP_INFO(logger, "[Diagnostic] Current EE: (%.2f, %.2f, %.2f)",
+  //             current_pose.position.x,
+  //             current_pose.position.y,
+  //             current_pose.position.z);
   
   // ================================================================
   // GOAL SETUP (C: Fixed coordinates within reach)
@@ -229,24 +229,28 @@ int main(int argc, char* argv[])
   goal_pose.position.x = 0.65;  // Within reach!
   goal_pose.position.y = 0.0;   
   goal_pose.position.z = 0.80;  // Above item
-  goal_pose.orientation.w = 1.0;
+  
+  goal_pose.orientation.x = 1.0; // vertical down
+  goal_pose.orientation.y = 0.0;
+  goal_pose.orientation.z = 0.0;
+  goal_pose.orientation.w = 0.0;
   
   RCLCPP_INFO(logger, "Goal EE position: (%.2f, %.2f, %.2f)",
               goal_pose.position.x,
               goal_pose.position.y,
               goal_pose.position.z);
   
-  double distance = std::sqrt(
-      std::pow(goal_pose.position.x - current_pose.position.x, 2) +
-      std::pow(goal_pose.position.y - current_pose.position.y, 2) +
-      std::pow(goal_pose.position.z - current_pose.position.z, 2)
-  );
+  // double distance = std::sqrt(
+  //     std::pow(goal_pose.position.x - current_pose.position.x, 2) +
+  //     std::pow(goal_pose.position.y - current_pose.position.y, 2) +
+  //     std::pow(goal_pose.position.z - current_pose.position.z, 2)
+  // );
   
-  RCLCPP_INFO(logger, "Distance to goal: %.2fm (Panda max reach ~0.85m)", distance);
+  // RCLCPP_INFO(logger, "Distance to goal: %.2fm (Panda max reach ~0.85m)", distance);
   
-  if (distance > 0.85) {
-    RCLCPP_WARN(logger, "⚠ Goal might be beyond reach!");
-  }
+  // if (distance > 0.85) {
+  //   RCLCPP_WARN(logger, "⚠ Goal might be beyond reach!");
+  // }
   
   // (A) Visualize goal marker
   RCLCPP_INFO(logger, "Publishing goal marker (RED sphere in RViz)...");
@@ -366,7 +370,7 @@ int main(int argc, char* argv[])
   RCLCPP_INFO(logger, "[Phase 2] Descending to grasp...");
   
   std::vector<geometry_msgs::msg::Pose> grasp_waypoints;
-  current_pose = move_group.getCurrentPose().pose;
+  geometry_msgs::msg::Pose current_pose = move_group.getCurrentPose().pose;
   grasp_waypoints.push_back(current_pose);
   
   geometry_msgs::msg::Pose grasp_pose = current_pose;
