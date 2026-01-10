@@ -57,5 +57,5 @@ Demonstrates systems-level reasoning for production robotics:
 [ERROR] Failed to fetch current robot state  ← Your C++ code can't get state
 [ros2run]: Segmentation fault  ← Crash when trying to use invalid state
 
-My solution: 
+My solution: this is a common issue in robotics world and i know how to debug this time synchronization
 
