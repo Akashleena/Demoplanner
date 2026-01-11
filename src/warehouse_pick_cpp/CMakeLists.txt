@@ -27,6 +27,20 @@ ament_target_dependencies(warehouse_systems_demo
   moveit_core
   visualization_msgs
 )
+add_executable(orientation_finder src/orientation_finder.cpp)
+target_include_directories(orientation_finder PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+target_compile_features(orientation_finder PUBLIC c_std_99 cxx_std_17)
+ament_target_dependencies(orientation_finder
+  rclcpp
+  moveit_ros_planning_interface
+  geometry_msgs
+  tf2_geometry_msgs
+)
+
+install(TARGETS orientation_finder
+  DESTINATION lib/${PROJECT_NAME})
 # Install
 install(TARGETS
   warehouse_pick_place
