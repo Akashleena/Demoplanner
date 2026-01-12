@@ -1,0 +1,21 @@
+experiment:
+  name: "multi_start_baseline"
+  
+planner:
+  multi_start:
+    enabled: true      # Change to false for single-start
+    num_attempts: 6
+  
+  planning_time_sec: 10.0
+
+goal:
+  position:
+    x: 0.65
+    y: 0.0
+    z: 0.80
+  
+  start_joints: [0.0, -0.785, 0.0, -2.356, 0.0, 1.571, 0.785]
+
+logging:
+  output_dir: "/home/aleenatron/ws_moveit/results/multi_start"
+  csv_filename: "results.csv"

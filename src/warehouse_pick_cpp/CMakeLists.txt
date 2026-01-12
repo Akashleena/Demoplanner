@@ -10,27 +10,60 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(moveit_ros_planning_interface REQUIRED)
 find_package(moveit_visual_tools REQUIRED)
+find_package(moveit_core REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(visualization_msgs REQUIRED)
+find_package(yaml-cpp REQUIRED)
 
-# Add executable
+# ================================================================
+# UTILS LIBRARY
+# ================================================================
+add_library(experiment_utils
+  src/utils/config_loader.cpp
+  src/utils/experiment_logger.cpp
+)
+
+target_include_directories(experiment_utils PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+  $<INSTALL_INTERFACE:include>
+)
+
+target_link_libraries(experiment_utils
+  yaml-cpp
+)
+
+# ================================================================
+# EXECUTABLES
+# ================================================================
+
+# warehouse_pick_place (existing)
 add_executable(warehouse_pick_place src/warehouse_pick_place.cpp)
-add_executable(warehouse_systems_demo src/warehouse_systems_demo.cpp)
 ament_target_dependencies(warehouse_pick_place
   rclcpp
   moveit_ros_planning_interface
   moveit_visual_tools
   geometry_msgs
 )
+
+# warehouse_systems_demo (updated with utils)
+add_executable(warehouse_systems_demo src/warehouse_systems_demo.cpp)
 ament_target_dependencies(warehouse_systems_demo
   rclcpp
   moveit_ros_planning_interface
   moveit_core
+  geometry_msgs
   visualization_msgs
 )
+target_link_libraries(warehouse_systems_demo
+  experiment_utils  # ← Links yaml-cpp + utils
+)
+
+# orientation_finder (existing)
 add_executable(orientation_finder src/orientation_finder.cpp)
 target_include_directories(orientation_finder PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
+  $<INSTALL_INTERFACE:include>
+)
 target_compile_features(orientation_finder PUBLIC c_std_99 cxx_std_17)
 ament_target_dependencies(orientation_finder
   rclcpp
@@ -39,13 +72,15 @@ ament_target_dependencies(orientation_finder
   tf2_geometry_msgs
 )
 
-install(TARGETS orientation_finder
-  DESTINATION lib/${PROJECT_NAME})
-# Install
+# ================================================================
+# INSTALL
+# ================================================================
 install(TARGETS
   warehouse_pick_place
+  warehouse_systems_demo
+  orientation_finder
+  experiment_utils  # ← Install library too
   DESTINATION lib/${PROJECT_NAME}
 )
-install(TARGETS warehouse_systems_demo DESTINATION lib/${PROJECT_NAME})
 
 ament_package()

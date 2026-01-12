@@ -1,12 +1,14 @@
 #include <memory>
 #include <vector>
 #include <limits>
+#include <chrono>
 #include <rclcpp/rclcpp.hpp>
 #include <moveit/move_group_interface/move_group_interface.hpp>
 #include <moveit/robot_trajectory/robot_trajectory.hpp>
 #include <visualization_msgs/msg/marker.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
-
+#include "utils/config_loader.hpp"
+#include "utils/experiment_logger.hpp"
 // ============================================================================
 // VISUALIZATION HELPERS
 // ============================================================================
@@ -184,20 +186,52 @@ int main(int argc, char* argv[])
   
   auto const logger = rclcpp::get_logger("systems_demo");
   
+  // ================================================================
+  // LOAD CONFIG FROM YAML
+  // ================================================================
+  std::string config_path = "../config/experiment.yaml";
+  ExperimentConfig config;
+  
+  try {
+    config = ExperimentConfig::load(config_path);
+    config.print();
+  } catch (const std::exception& e) {
+    RCLCPP_ERROR(logger, "Failed to load config: %s", e.what());
+    RCLCPP_ERROR(logger, "Using hardcoded defaults instead");
+    
+    // Fallback to hardcoded values
+    config.multi_start_enabled = true;
+    config.num_attempts = 6;
+    config.planning_time_sec = 10.0;
+    config.goal_x = 0.65;
+    config.goal_y = 0.0;
+    config.goal_z = 0.80;
+    config.start_joints = {0.0, -0.785, 0.0, -2.356, 0.0, 1.571, 0.785};
+    config.output_dir = "/tmp";
+    config.csv_filename = "multi_start_results.csv";
+  }
+  
+  // ================================================================
+  // SETUP CSV LOGGER
+  // ================================================================
+  std::string log_path = config.output_dir + "/" + config.csv_filename;
+  ExperimentLogger logger_csv(log_path);
+  RCLCPP_INFO(logger, "Logging to: %s", log_path.c_str());
+  
+  // ================================================================
+  // SETUP MOVE GROUP
+  // ================================================================
   using moveit::planning_interface::MoveGroupInterface;
   auto move_group = MoveGroupInterface(node, "panda_arm");
   
-  RCLCPP_INFO(logger, "=== Warehouse Systems Demo with Visualization ===");
+  RCLCPP_INFO(logger, "=== Warehouse Systems Demo ===");
   RCLCPP_INFO(logger, " ");
   
   // ================================================================
-  // PHASE 0: Move to Safe Start
+  // PHASE 0: Safe Start (FROM CONFIG)
   // ================================================================
   RCLCPP_INFO(logger, "[Phase 0] Moving to safe start...");
-  std::vector<double> safe_joints = {
-      0.0, -0.785, 0.0, -2.356, 0.0, 1.571, 0.785
-  };
-  move_group.setJointValueTarget(safe_joints);
+  move_group.setJointValueTarget(config.start_joints);
   
   moveit::planning_interface::MoveGroupInterface::Plan safe_plan;
   if (move_group.plan(safe_plan) != moveit::core::MoveItErrorCode::SUCCESS) {
@@ -212,91 +246,36 @@ int main(int argc, char* argv[])
   RCLCPP_INFO(logger, " ");
   
   // ================================================================
-  // DIAGNOSTIC: Check current position and reach
-  // ================================================================
-  // geometry_msgs::msg::Pose current_pose = move_group.getCurrentPose().pose;
-  // RCLCPP_INFO(logger, "[Diagnostic] Current EE: (%.2f, %.2f, %.2f)",
-  //             current_pose.position.x,
-  //             current_pose.position.y,
-  //             current_pose.position.z);
-  
-  // ================================================================
-  // GOAL SETUP (C: Fixed coordinates within reach)
+  // GOAL SETUP (FROM CONFIG)
   // ================================================================
   RCLCPP_INFO(logger, "[Stage 0] Setting up goal...");
-  move_group.setPositionTarget(0.65, 0.0, 0.80, "panda_hand");
+  move_group.setPositionTarget(config.goal_x, config.goal_y, config.goal_z, "panda_hand");
 
-  RCLCPP_INFO(logger, "Goal position: (0.65, 0.00, 0.80)");
+  RCLCPP_INFO(logger, "Goal position: (%.2f, %.2f, %.2f)", 
+              config.goal_x, config.goal_y, config.goal_z);
   RCLCPP_INFO(logger, "Orientation: FREE (RRT optimizes)");
-
-  geometry_msgs::msg::Pose goal_pose;
-  goal_pose.position.x = 0.65;  // Within reach!
-  goal_pose.position.y = 0.0;   
-  goal_pose.position.z = 0.80;  // Above item
-  
-  goal_pose.orientation.x = 1.0; // vertical down
-  goal_pose.orientation.y = 0.0;
-  goal_pose.orientation.z = 0.0;
-  goal_pose.orientation.w = 0.0;
-  
-  RCLCPP_INFO(logger, "Goal EE position: (%.2f, %.2f, %.2f)",
-              goal_pose.position.x,
-              goal_pose.position.y,
-              goal_pose.position.z);
-  
-  // double distance = std::sqrt(
-  //     std::pow(goal_pose.position.x - current_pose.position.x, 2) +
-  //     std::pow(goal_pose.position.y - current_pose.position.y, 2) +
-  //     std::pow(goal_pose.position.z - current_pose.position.z, 2)
-  // );
-  
-  // RCLCPP_INFO(logger, "Distance to goal: %.2fm (Panda max reach ~0.85m)", distance);
-  
-  // if (distance > 0.85) {
-  //   RCLCPP_WARN(logger, "⚠ Goal might be beyond reach!");
-  // }
-  
-  // (A) Visualize goal marker
-  RCLCPP_INFO(logger, "Publishing goal marker (RED sphere in RViz)...");
-  publish_goal_marker(node, goal_pose);
-  rclcpp::sleep_for(std::chrono::seconds(1));
-  
-  // // (B) IK Check
-  // RCLCPP_INFO(logger, "[IK Check] Testing goal reachability...");
-  // move_group.setPoseTarget(goal_pose);
-  
-  // ============================================================================
-// SEGFAULT
-// ============================================================================
-  // bool ik_valid = move_group.setApproximateJointValueTarget(goal_pose, "panda_hand");
-
-  
-  // if (!ik_valid) {
-  //   RCLCPP_ERROR(logger, "✗ GOAL IS UNREACHABLE (IK failed)!");
-  //   RCLCPP_ERROR(logger, "  Reduce X coordinate or adjust Z height");
-  //   rclcpp::shutdown();
-  //   return 1;
-  // }
-  
-  // RCLCPP_INFO(logger, "✓ Goal is kinematically reachable");
-  // RCLCPP_INFO(logger, " ");
-  
-  // ================================================================
-  // STAGE 1: Multi-Start Planning
-  // ================================================================
-  RCLCPP_INFO(logger, "[Stage 1] Multi-start planning (K=6)...");
   RCLCPP_INFO(logger, " ");
   
-  // move_group.setPoseTarget(goal_pose); // doing this because rrt cannot find a path
-  move_group.setPlanningTime(10.0);
+  // ================================================================
+  // STAGE 1: Multi-Start Planning (FROM CONFIG)
+  // ================================================================
+  const int K = config.multi_start_enabled ? config.num_attempts : 1;
+  move_group.setPlanningTime(config.planning_time_sec);
   
-  const int K = 6;
+  RCLCPP_INFO(logger, "[Stage 1] Multi-start planning (K=%d)...", K);
+  RCLCPP_INFO(logger, " ");
+  
   std::vector<moveit::planning_interface::MoveGroupInterface::Plan> candidates;
   std::vector<TrajectoryScore> scores;
   
   for (int i = 0; i < K; ++i) {
     moveit::planning_interface::MoveGroupInterface::Plan plan;
+    
+    // Measure planning time
+    auto t_start = std::chrono::high_resolution_clock::now();
     auto result = move_group.plan(plan);
+    auto t_end = std::chrono::high_resolution_clock::now();
+    double planning_time = std::chrono::duration<double>(t_end - t_start).count();
     
     TrajectoryScore score;
     
@@ -304,23 +283,26 @@ int main(int argc, char* argv[])
       score = score_trajectory(plan);
       candidates.push_back(plan);
       
-      RCLCPP_INFO(logger, "Attempt %d | valid=1 | dense=1 | score=%.2f | len=%.2f | smooth=%.2f",
-                  i, score.total_cost, score.path_length, score.smoothness);
+      // LOG SUCCESS TO CSV
+      logger_csv.log_attempt(0, i, true, planning_time, 
+                            score.path_length, score.smoothness, score.total_cost);
       
-      // Visualize this trajectory's waypoints
-      // (For now just first successful one to avoid clutter)
-      if (candidates.size() == 1) {
-        RCLCPP_INFO(logger, "  → Visualizing waypoints (blue dots)");
-        visualize_trajectory_waypoints(node, move_group, plan, "blue");
-      }
+      RCLCPP_INFO(logger, "Attempt %d | valid=1 | time=%.3fs | score=%.2f | len=%.2f | smooth=%.2f",
+                  i, planning_time, score.total_cost, score.path_length, score.smoothness);
       
     } else {
       score.valid = false;
-      RCLCPP_INFO(logger, "Attempt %d | valid=0", i);
+      
+      // LOG FAILURE TO CSV
+      logger_csv.log_attempt(0, i, false, planning_time, 0, 0, 999);
+      
+      RCLCPP_INFO(logger, "Attempt %d | valid=0 | time=%.3fs", i, planning_time);
     }
     
     scores.push_back(score);
   }
+  
+  logger_csv.flush();  // Save CSV immediately
   
   RCLCPP_INFO(logger, " ");
   
@@ -356,83 +338,10 @@ int main(int argc, char* argv[])
   RCLCPP_INFO(logger, " ");
   
   // ================================================================
-  // Execute Best Plan
+  // DONE (Skip execution for now)
   // ================================================================
-  RCLCPP_INFO(logger, "Executing best trajectory to approach...");
-  
-  if (best_idx >= 0) {
-    move_group.execute(candidates[best_idx]);
-    RCLCPP_INFO(logger, "✓ Reached approach pose");
-  }
-  
-  rclcpp::sleep_for(std::chrono::seconds(1));
-  RCLCPP_INFO(logger, " ");
-  
-  // ================================================================
-  // PHASE 2: Cartesian Descent
-  // ================================================================
-  RCLCPP_INFO(logger, "[Phase 2] Descending to grasp...");
-  
-  std::vector<geometry_msgs::msg::Pose> grasp_waypoints;
-  geometry_msgs::msg::Pose current_pose = move_group.getCurrentPose().pose;
-  grasp_waypoints.push_back(current_pose);
-  
-  geometry_msgs::msg::Pose grasp_pose = current_pose;
-  grasp_pose.position.z = 0.70;  // Item height
-  grasp_waypoints.push_back(grasp_pose);
-  
-  moveit_msgs::msg::RobotTrajectory grasp_trajectory;
-  double grasp_fraction = move_group.computeCartesianPath(
-      grasp_waypoints, 0.01, grasp_trajectory
-  );
-  
-  RCLCPP_INFO(logger, "Cartesian grasp: %.1f%% achieved", grasp_fraction * 100.0);
-  
-  if (grasp_fraction > 0.9) {
-    move_group.execute(grasp_trajectory);
-    RCLCPP_INFO(logger, "✓ Reached grasp position");
-  } else {
-    RCLCPP_WARN(logger, "⚠ Grasp path incomplete");
-  }
-  
-  rclcpp::sleep_for(std::chrono::milliseconds(500));
-  RCLCPP_INFO(logger, "[Simulating] Closing gripper...");
-  rclcpp::sleep_for(std::chrono::seconds(1));
-  RCLCPP_INFO(logger, "✓ Item grasped!");
-  RCLCPP_INFO(logger, " ");
-  
-  // ================================================================
-  // PHASE 3: Cartesian Lift
-  // ================================================================
-  RCLCPP_INFO(logger, "[Phase 3] Lifting item...");
-  
-  std::vector<geometry_msgs::msg::Pose> lift_waypoints;
-  current_pose = move_group.getCurrentPose().pose;
-  lift_waypoints.push_back(current_pose);
-  
-  geometry_msgs::msg::Pose lift_pose = current_pose;
-  lift_pose.position.z = 0.85;
-  lift_waypoints.push_back(lift_pose);
-  
-  moveit_msgs::msg::RobotTrajectory lift_trajectory;
-  double lift_fraction = move_group.computeCartesianPath(
-      lift_waypoints, 0.01, lift_trajectory
-  );
-  
-  RCLCPP_INFO(logger, "Cartesian lift: %.1f%% achieved", lift_fraction * 100.0);
-  
-  if (lift_fraction > 0.9) {
-    move_group.execute(lift_trajectory);
-    RCLCPP_INFO(logger, "✓ Item lifted!");
-  } else {
-    RCLCPP_WARN(logger, "⚠ Lift path incomplete");
-  }
-  
-  RCLCPP_INFO(logger, " ");
-  RCLCPP_INFO(logger, "=== Pick Complete! ===");
-  RCLCPP_INFO(logger, "Check RViz for:");
-  RCLCPP_INFO(logger, "  - RED sphere = goal marker");
-  RCLCPP_INFO(logger, "  - BLUE dots = RRT waypoints");
+  RCLCPP_INFO(logger, "=== Planning Complete! ===");
+  RCLCPP_INFO(logger, "Results saved to: %s", log_path.c_str());
   
   rclcpp::shutdown();
   return 0;
