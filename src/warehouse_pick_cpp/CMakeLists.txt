@@ -44,7 +44,9 @@ ament_target_dependencies(warehouse_pick_place
   moveit_visual_tools
   geometry_msgs
 )
-
+add_executable(find_topdown_joints src/find_topdown_joints.cpp)
+ament_target_dependencies(find_topdown_joints rclcpp moveit_ros_planning_interface)
+install(TARGETS find_topdown_joints DESTINATION lib/${PROJECT_NAME})
 # warehouse_systems_demo (updated with utils)
 add_executable(warehouse_systems_demo src/warehouse_systems_demo.cpp)
 ament_target_dependencies(warehouse_systems_demo

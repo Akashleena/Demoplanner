@@ -82,7 +82,24 @@ int main(int argc, char* argv[])
     std::cout << "  z: " << current_pose.position.z << std::endl;
     
     print_orientation_info(current_pose.orientation, "CURRENT ORIENTATION (Home Position)");
+    // ========================================================================
+// STEP 1.5: Test specific joint configuration
+// ========================================================================
+RCLCPP_INFO(logger, "[STEP 1.5] Testing start joint configuration...");
+
+std::vector<double> test_joints = {0.0, 0.5, 0.0, -1.5, 0.0, 2.0, 0.785};
+move_group.setJointValueTarget(test_joints);
+
+moveit::planning_interface::MoveGroupInterface::Plan joint_plan;
+if (move_group.plan(joint_plan) == moveit::core::MoveItErrorCode::SUCCESS) {
+    move_group.execute(joint_plan);
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
     
+    geometry_msgs::msg::Pose start_pose = move_group.getCurrentPose().pose;
+    print_orientation_info(start_pose.orientation, "START JOINTS ORIENTATION");
+} else {
+    RCLCPP_ERROR(logger, "Cannot reach test joints!");
+}
     // ========================================================================
     // STEP 2: Test Common Vertical-Down Orientations
     // ========================================================================

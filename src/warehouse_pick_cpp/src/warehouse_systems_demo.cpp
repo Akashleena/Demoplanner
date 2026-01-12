@@ -7,6 +7,8 @@
 #include <moveit/robot_trajectory/robot_trajectory.hpp>
 #include <visualization_msgs/msg/marker.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
+#include <moveit_msgs/msg/constraints.hpp>              // ADDED
+#include <moveit_msgs/msg/orientation_constraint.hpp>   // ADDED
 #include "utils/config_loader.hpp"
 #include "utils/experiment_logger.hpp"
 // ============================================================================
@@ -202,13 +204,16 @@ int main(int argc, char* argv[])
     // Fallback to hardcoded values
     config.multi_start_enabled = true;
     config.num_attempts = 6;
-    config.planning_time_sec = 10.0;
-    config.goal_x = 0.65;
+    config.planning_time_sec = 30.0;
+    config.goal_x = 0.5;
     config.goal_y = 0.0;
     config.goal_z = 0.80;
+    // config.start_joints = {0.0, -0.785, 0.0, -2.356, 0.0, 1.571, 0.785};
+    // config.start_joints = {0.0, 0.5, 0.0, -1.5, 0.0, 2.0, 0.785};
+    // config.start_joints = {0.212248, -0.50645, -0.180782, -2.38856, -0.0916522, 1.88693, 0.0823912};
     config.start_joints = {0.0, -0.785, 0.0, -2.356, 0.0, 1.571, 0.785};
-    config.output_dir = "/tmp";
-    config.csv_filename = "multi_start_results.csv";
+    config.output_dir = "/home/aleenatron/ws_moveit/results";
+    config.csv_filename = "constraint_1deg.csv";
   }
   
   // ================================================================
@@ -249,11 +254,47 @@ int main(int argc, char* argv[])
   // GOAL SETUP (FROM CONFIG)
   // ================================================================
   RCLCPP_INFO(logger, "[Stage 0] Setting up goal...");
-  move_group.setPositionTarget(config.goal_x, config.goal_y, config.goal_z, "panda_hand");
-
+//   move_group.setPositionTarget(config.goal_x, config.goal_y, config.goal_z, "panda_hand");
+  geometry_msgs::msg::Pose goal_pose;
+    goal_pose.position.x = config.goal_x;
+    goal_pose.position.y = config.goal_y;
+    goal_pose.position.z = config.goal_z;
+    goal_pose.orientation.x = 1.0;
+    goal_pose.orientation.y = 0.0;
+    goal_pose.orientation.z = 0.0;
+    goal_pose.orientation.w = 0.0;
+    move_group.setPoseTarget(goal_pose, "panda_link8");
   RCLCPP_INFO(logger, "Goal position: (%.2f, %.2f, %.2f)", 
               config.goal_x, config.goal_y, config.goal_z);
-  RCLCPP_INFO(logger, "Orientation: FREE (RRT optimizes)");
+  
+  // ================================================================
+  // ORIENTATION CONSTRAINT: Top-down gripper (ADDED)
+  // ================================================================
+  moveit_msgs::msg::Constraints path_constraints;
+  path_constraints.name = "top_down_gripper";
+
+  moveit_msgs::msg::OrientationConstraint ocm;
+  ocm.link_name = "panda_link8";
+  ocm.header.frame_id = "panda_link0";
+
+  // Top-down orientation: gripper Z-axis points DOWN
+  // This is 180° rotation about X-axis
+  // Quaternion: w=0, x=1, y=0, z=0
+  ocm.orientation.w = 0.0;
+  ocm.orientation.x = 1.0;
+  ocm.orientation.y = 0.0;
+  ocm.orientation.z = 0.0;
+
+  // Tolerances in radians
+  ocm.absolute_x_axis_tolerance = 0.017;   // ~15° tilt allowed
+  ocm.absolute_y_axis_tolerance = 0.017;   // ~15° tilt allowed
+  ocm.absolute_z_axis_tolerance = 3.14;  // Free rotation about vertical (yaw)
+  ocm.weight = 1.0;
+
+  path_constraints.orientation_constraints.push_back(ocm);
+  move_group.setPathConstraints(path_constraints);
+
+  RCLCPP_INFO(logger, "Orientation: TOP-DOWN constrained (±1°)");
   RCLCPP_INFO(logger, " ");
   
   // ================================================================
@@ -313,6 +354,7 @@ int main(int argc, char* argv[])
   
   if (candidates.empty()) {
     RCLCPP_ERROR(logger, "✗ No valid plans found!");
+    RCLCPP_ERROR(logger, "RRT struggles with orientation constraints - this is expected!");
     rclcpp::shutdown();
     return 1;
   }
@@ -336,6 +378,11 @@ int main(int argc, char* argv[])
   
   RCLCPP_INFO(logger, "Best attempt: %d (cost=%.2f)", valid_indices[best_idx], best_cost);
   RCLCPP_INFO(logger, " ");
+  
+  // ================================================================
+  // CLEANUP: Clear constraints (ADDED)
+  // ================================================================
+  move_group.clearPathConstraints();
   
   // ================================================================
   // DONE (Skip execution for now)
