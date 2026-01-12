@@ -1,70 +1,92 @@
-```md
-# Constraint-Aware Motion Planning with Multi-Start RRT and Trajectory Optimization
+# Constrained Motion Planning for Warehouse Pick-and-Place
 
-Production-style manipulation planning for MoveIt 2 that addresses real-world deployment challenges: probabilistic planner variance, explicit collision safety, execution quality, and task repeatability.
+Multi-start RRT planning with orientation constraints for top-down grasping in warehouse environments.  
+Built with MoveIt 2 and ROS 2 Jazzy.
 
-## Key Features
+---
 
-Multi-Start Planning – Runs 6 sequential RRT attempts, scores candidates by path length + smoothness + collision validity, selects best trajectory
+## Overview
 
-CHOMP-lite Smoothing – Post-processing optimization (10-20 iterations) reduces curvature while preserving collision-free property and constraint satisfaction
+Warehouse pick-and-place tasks often require the end-effector to remain top-down throughout the motion.  
+However, standard sampling-based planners (e.g., RRT) struggle when strict orientation constraints are imposed.
 
-Dense Collision Validation – Explicit interpolation between waypoints catches collisions that discrete checking misses; adaptive resolution based on proximity to obstacles
+This project empirically studies the practical limits of constrained RRT planning and demonstrates how multi-start strategies improve reliability—up to a point.
 
-Trajectory Caching – Keyed by (start state, goal pose, constraints, scene hash). Cold run plans and caches; warm run retrieves in milliseconds
+---
 
-Path Constraints – End-effector upright orientation enforced via MoveIt's constraint API throughout planning
+## Problem Statement
 
-## Demo Setup
-Scene: Shelf obstacles + target object  
-Task: Constrained reach-to-pose with Panda arm  
-Visual Output: RViz overlay of raw RRT (blue) vs smoothed (green) trajectories
+- RRT samples randomly in joint space
+- Orientation constraints define a lower-dimensional manifold
+- As constraint tolerance tightens, valid samples become vanishingly rare
+- Planning becomes slow, unstable, or fails entirely
 
-Console Output:
-```
-Attempt 0 | valid=1 | dense=1 | score=12.34
-Attempt 1 | valid=1 | dense=0 | score=10.02
-Best: attempt 1
-[CACHE STORE]
+---
 
-[Run 2]
-[CACHE HIT] 6ms
-```
-## Run Instructions
+## Approach
+
+1. Apply an orientation constraint (top-down gripper) using MoveIt’s constraint API  
+2. Run multiple independent RRT attempts per query  
+3. Score candidate trajectories and select the best result  
+4. Sweep orientation tolerance values and log performance metrics
+
+---
+
+## Key Findings
+
+| Orientation Tolerance | Success Rate | Avg Planning Time | Path Quality |
+|----------------------|--------------|-------------------|--------------|
+| ±23° | 100% | ~60 ms | Optimal (~2 rad) |
+| ±10° | 100% | ~200 ms | Optimal |
+| ±5°  | 100% | ~560 ms | Optimal |
+| ±2°  | 100% | ~10 s | Degraded (~7 rad) |
+| ±1°  | 50%  | ~15 s | Erratic detours |
+| ±0.5°| 0%   | Timeout | — |
+
+Takeaway:  
+Sampling-based planners like RRT have a practical orientation constraint limit of ~±2–5°.  
+Below this range, Cartesian or hybrid planners are more appropriate.
+
+---
+
+## Features Implemented
+
+- Multi-start RRT planning (K = 6 attempts)
+- End-effector orientation constraint (top-down grasping)
+- Trajectory scoring based on:
+  - Path length  
+  - Smoothness
+- Constraint tolerance sweep with CSV logging
+- Warehouse-style scene with shelf obstacles
+
+---
+
+## Running the Demo
 
 ```bash
-# Terminal 1
+# Terminal 1: Start MoveIt demo
 ros2 launch moveit_resources_panda_moveit_config demo.launch.py
 
-# Terminal 2
+# Terminal 2: Load warehouse scene
 ros2 run warehouse_demo_py plan_warehouse_pick
 
-# Terminal 3
+# Terminal 3: Run planning experiments
 ros2 run warehouse_pick_cpp warehouse_systems_demo
 ```
+## Next Steps
 
+- Dense collision validation  
+  To catch collisions missed by waypoint-only checking near shelves and thin obstacles.
 
-## Why It Matters
+- Trajectory caching  
+  To reduce planning latency for repeated warehouse picks with similar start and goal states.
 
-Demonstrates systems-level reasoning for production robotics:
-- Handling probabilistic planner behavior
-- Balancing safety and efficiency 
-- Optimizing for repeated warehouse-style tasks
-- Engineering collision-safe motion beyond default MoveIt guarantees
+- Hybrid Cartesian + RRT planning  
+  To handle very tight orientation constraints where sampling-based planners become unreliable.
 
-  ## Debug logs
-  - [move_group]: Goal reached, success!  ← RViz/MoveGroup says SUCCESS
-[ERROR] Failed to fetch current robot state  ← Your C++ code can't get state
-[ros2run]: Segmentation fault  ← Crash when trying to use invalid state
+- Manipulability and singularity awareness  
+  To avoid near-singular configurations that often appear in constrained motion.
 
-My solution: this is a common issue in robotics world and i know how to debug this time synchronization
-```
-header:
-  stamp:
-    sec: 1768076051        ← Valid timestamp!
-    nanosec: 96313812
-position: [0.0, 0.0, 0.0, -0.785, ...]  ← Valid joint positions!
-```
-```
-latest received state has time 0.000000  ← Code sees no timestamp!
-```
+- Adaptive constraint relaxation  
+  To automatically detect infeasible constraints and relax them safely instead of timing out.
+
