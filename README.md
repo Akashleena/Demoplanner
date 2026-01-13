@@ -51,13 +51,29 @@ Below this range, Cartesian or hybrid planners are more appropriate.
 
 ## Features Implemented
 
+### Feature 1: Constrained Multi-Start RRT Planning
 - Multi-start RRT planning (K = 6 attempts)
 - End-effector orientation constraint (top-down grasping)
 - Trajectory scoring based on:
-  - Path length  
+  - Path length
   - Smoothness
 - Constraint tolerance sweep with CSV logging
 - Warehouse-style scene with shelf obstacles
+
+### Feature 2: Hybrid Pick-and-Place Planning (Task-Aware)
+Industrial pick-and-place requires different planning strategies for different motion phases.  
+This project implements a **hybrid task-space + sampling-based planning structure**:
+
+| Phase | Planner | Why |
+|------|--------|-----|
+| Transit (home → prepick) | RRT | Obstacle avoidance, any valid path |
+| Approach (prepick → pick) | Cartesian | Straight-line, predictable |
+| Retreat (pick → postpick) | Cartesian | Prevent object drag / collisions |
+| Transfer (postpick → preplace) | RRT | Navigate around obstacles |
+| Approach (preplace → place) | Cartesian | Precise placement |
+
+#### Task-Space Frame Generator
+Inspired by Russ Tedrake’s manipulation course, the system generates *semantic task frames* from object poses:
 
 ---
 
@@ -80,9 +96,6 @@ ros2 run warehouse_pick_cpp warehouse_systems_demo
 
 - Trajectory caching  
   To reduce planning latency for repeated warehouse picks with similar start and goal states.
-
-- Hybrid Cartesian + RRT planning  
-  To handle very tight orientation constraints where sampling-based planners become unreliable.
 
 - Manipulability and singularity awareness  
   To avoid near-singular configurations that often appear in constrained motion.
