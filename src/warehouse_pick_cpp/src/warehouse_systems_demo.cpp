@@ -206,14 +206,14 @@ int main(int argc, char* argv[])
     config.num_attempts = 6;
     config.planning_time_sec = 30.0;
     config.goal_x = 0.5;
-    config.goal_y = 0.0;
-    config.goal_z = 0.80;
+    config.goal_y = 0.0;   // off to the side
+    config.goal_z = 0.5;   // above target
     // config.start_joints = {0.0, -0.785, 0.0, -2.356, 0.0, 1.571, 0.785};
     // config.start_joints = {0.0, 0.5, 0.0, -1.5, 0.0, 2.0, 0.785};
     // config.start_joints = {0.212248, -0.50645, -0.180782, -2.38856, -0.0916522, 1.88693, 0.0823912};
     config.start_joints = {0.0, -0.785, 0.0, -2.356, 0.0, 1.571, 0.785};
     config.output_dir = "/home/aleenatron/ws_moveit/results";
-    config.csv_filename = "constraint_1deg.csv";
+    config.csv_filename = "singularity_test.csv";
   }
   
   // ================================================================
@@ -286,15 +286,14 @@ int main(int argc, char* argv[])
   ocm.orientation.z = 0.0;
 
   // Tolerances in radians
-  ocm.absolute_x_axis_tolerance = 0.017;   // ~15° tilt allowed
-  ocm.absolute_y_axis_tolerance = 0.017;   // ~15° tilt allowed
-  ocm.absolute_z_axis_tolerance = 3.14;  // Free rotation about vertical (yaw)
+  ocm.absolute_x_axis_tolerance = 0.4;   // ~23° - use loose tolerance
+  ocm.absolute_y_axis_tolerance = 0.4;
+  ocm.absolute_z_axis_tolerance = 3.14;
   ocm.weight = 1.0;
 
   path_constraints.orientation_constraints.push_back(ocm);
   move_group.setPathConstraints(path_constraints);
-
-  RCLCPP_INFO(logger, "Orientation: TOP-DOWN constrained (±1°)");
+  RCLCPP_INFO(logger, "Orientation: TOP-DOWN constrained (±23°)");
   RCLCPP_INFO(logger, " ");
   
   // ================================================================
@@ -324,6 +323,22 @@ int main(int argc, char* argv[])
       score = score_trajectory(plan);
       candidates.push_back(plan);
       
+      // Check manipulability along path
+      auto& points = plan.trajectory.joint_trajectory.points;
+      RCLCPP_INFO(logger, "  Manipulability check (%zu waypoints):", points.size());
+      double min_manip = 1.0;
+      for (size_t p = 0; p < points.size(); p += std::max(1ul, points.size()/5)) {
+          double j4 = points[p].positions[3];
+          double j6 = points[p].positions[5];
+          double manip = std::abs(std::sin(j4)) * std::abs(std::sin(j6));
+          min_manip = std::min(min_manip, manip);
+          RCLCPP_INFO(logger, "    [%zu] j4=%.1f° j6=%.1f° manip=%.3f %s",
+                      p, j4*180.0/M_PI, j6*180.0/M_PI, manip,
+                      manip < 0.1 ? " SINGULAR" : (manip < 0.3 ? "⚡LOW" : "✓"));
+      }
+      RCLCPP_INFO(logger, "  Min manipulability: %.3f %s", min_manip,
+                  min_manip < 0.1 ? " PATH NEAR SINGULARITY" : "");
+
       // LOG SUCCESS TO CSV
       logger_csv.log_attempt(0, i, true, planning_time, 
                             score.path_length, score.smoothness, score.total_cost);

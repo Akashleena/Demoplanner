@@ -26,6 +26,7 @@ setup(
     'console_scripts': [
         'add_warehouse_scene = warehouse_demo_py.add_warehouse_scene:main',
 	'plan_warehouse_pick = warehouse_demo_py.plan_warehouse_pick:main',
+    'warehouse_picker = warehouse_demo_py.warehouse_picker:main',
     ],
 },
 )
