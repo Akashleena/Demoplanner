@@ -78,7 +78,7 @@ Inspired by Russ Tedrake’s manipulation course, the system generates *semantic
 ---
 
 ## Running the Demo
-
+For Feature 1
 ```bash
 # Terminal 1: Start MoveIt demo
 ros2 launch moveit_resources_panda_moveit_config demo.launch.py
@@ -88,6 +88,18 @@ ros2 run warehouse_demo_py plan_warehouse_pick
 
 # Terminal 3: Run planning experiments
 ros2 run warehouse_pick_cpp warehouse_systems_demo
+```
+For Feature 2
+### Run Pick-and-Place Demo
+```bash
+# Terminal 1: MoveIt
+ros2 launch moveit_resources_panda_moveit_config demo.launch.py
+
+# Terminal 2: Scene
+ros2 run warehouse_demo_py warehouse_picker
+
+# Terminal 3: Pick-and-place
+ros2 run warehouse_pick_cpp warehouse_pick_place
 ```
 ## Next Steps
 
