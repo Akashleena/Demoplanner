@@ -1,4 +1,4 @@
-# Constrained Motion Planning for Warehouse Pick-and-Place
+# Constraint Motion Planning for Warehouse Pick-and-Place
 
 Multi-start RRT planning with orientation constraints for top-down grasping in warehouse environments.  
 Built with MoveIt 2 and ROS 2 Jazzy.
