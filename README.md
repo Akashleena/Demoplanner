@@ -5,10 +5,16 @@ Built with MoveIt 2 and ROS 2 Jazzy.
 
 ---
 ## Demo
-[View the demo presentation here](https://docs.google.com/presentation/d/1olo1cGZQv2Bil8W0DPs7fW4IPLR5U7UeDcmfDIqGfHU/edit?usp=sharing)
+
+▶ **View the full demo presentation**  
+ https://docs.google.com/presentation/d/1olo1cGZQv2Bil8W0DPs7fW4IPLR5U7UeDcmfDIqGfHU/edit?usp=sharing  
+
+⬇ **In the preview below, check detour at timestamp _0.47s_**  
 
 
-https://github.com/user-attachments/assets/d1fc76e1-d683-4441-a448-fde9ff12be32
+
+https://github.com/user-attachments/assets/db1595f4-5406-47b2-b03a-b03f1da41bf8
+
 
 
 
