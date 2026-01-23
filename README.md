@@ -129,6 +129,6 @@ ros2 run warehouse_pick_cpp warehouse_pick_place
 
 - Adaptive constraint relaxation  
   To automatically detect infeasible constraints and relax them safely instead of timing out.
-- ICP Based Pose estimation, Grasp failure recovery and dynamic obstacles.
+
 
 
