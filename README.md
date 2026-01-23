@@ -4,7 +4,10 @@ Multi-start RRT planning with orientation constraints for top-down grasping in w
 Built with MoveIt 2 and ROS 2 Jazzy.
 
 ---
-## DEMO https://docs.google.com/presentation/d/1olo1cGZQv2Bil8W0DPs7fW4IPLR5U7UeDcmfDIqGfHU/edit?usp=sharing
+## DEMO 
+## Demo
+[View the demo presentation](https://docs.google.com/presentation/d/1olo1cGZQv2Bil8W0DPs7fW4IPLR5U7UeDcmfDIqGfHU/edit?usp=sharing)
+
 
 ## Overview
 
