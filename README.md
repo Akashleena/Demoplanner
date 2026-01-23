@@ -4,6 +4,7 @@ Multi-start RRT planning with orientation constraints for top-down grasping in w
 Built with MoveIt 2 and ROS 2 Jazzy.
 
 ---
+## DEMO https://docs.google.com/presentation/d/1olo1cGZQv2Bil8W0DPs7fW4IPLR5U7UeDcmfDIqGfHU/edit?usp=sharing
 
 ## Overview
 
@@ -13,6 +14,7 @@ However, standard sampling-based planners (e.g., RRT) struggle when strict orien
 This project empirically studies the practical limits of constrained RRT planning and demonstrates how multi-start strategies improve reliability—up to a point.
 
 ---
+
 
 ## Problem Statement
 
@@ -114,4 +116,6 @@ ros2 run warehouse_pick_cpp warehouse_pick_place
 
 - Adaptive constraint relaxation  
   To automatically detect infeasible constraints and relax them safely instead of timing out.
+- ICP Based Pose estimation, Grasp failure recovery and dynamic obestacles
+- Once we achiieve all this lets move to mujoco or nvidia issac sim to do some trendy super sexy physical AI stuff xD (joking nope fundamntals first hype later. I am old school.)
 
