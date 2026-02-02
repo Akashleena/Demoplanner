@@ -105,7 +105,7 @@ int main(int argc, char* argv[])
         0.4, -0.2, 0.025,   // pick
         0.4,  0.2, 0.01     // place
 );
-    );
+    
     
     RCLCPP_INFO(logger, "Generated pick-place frames:");
     RCLCPP_INFO(logger, "  prepick:   (%.2f, %.2f, %.2f)", 
